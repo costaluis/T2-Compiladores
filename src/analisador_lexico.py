@@ -1,7 +1,7 @@
 #Import nas bibliotecas
 import sys
 import string
-
+'''
 #Verificação da entrada
 if(len(sys.argv) > 2):
     print("Numero de argumentos invalido!")
@@ -17,7 +17,7 @@ except:
 #Lê o arquivo de entrada e fecha
 texto = f.read()
 f.close()
-
+'''
 #Tabela de símbolos reservados
 tabela_simb_reservados = {
     'program' : 'simb_program',
@@ -216,32 +216,32 @@ tabela_outros = {
     'q20' : 'q20'
 }
 
-#Lista de estados de erro
-estados_erro = ['q29', 'q30']
 
-#Estado inicial do autômato
-estado_inicial = 'q0'
+def analisador_lexico(texto):
+    #Lista de estados de erro
+    estados_erro = ['q29', 'q30']
 
-#Estado referente à leitura de comentário
-estado_comentario = 'q20'
+    #Estado inicial do autômato
+    estado_inicial = 'q0'
 
-#Cabeça de leitura que irá percorrer o texto
-index = 0
+    #Estado referente à leitura de comentário
+    estado_comentario = 'q20'
 
-#Saída geral do analisador léxico
-output = ''
+    #Cabeça de leitura que irá percorrer o texto
+    index = 0
 
-#Cadeia formada por cada símbolo identificado
-cadeia = ''
+    #Saída geral do analisador léxico
+    output = ''
 
-#Estado atual do autômato
-estado = ''
+    #Cadeia formada por cada símbolo identificado
+    cadeia = ''
 
-#Teste de verificação para erro de leitura fora do vetor
-#Indica que o texto acabou antes de uma cadeia ser reconhecida
-try:
-    #Enquanto o texto não finaliza
-    while(True):
+    #Estado atual do autômato
+    estado = ''
+
+    #Teste de verificação para erro de leitura fora do vetor
+    #Indica que o texto acabou antes de uma cadeia ser reconhecida
+    try:
         #Inicia a leitura de uma cadeia
         #Autômato é setado em q0
         cadeia = ''
@@ -282,22 +282,24 @@ try:
                     func_output, index = estados_finais[estado](cadeia, index)
                     output += func_output
                     break
-#Tratamento do erro EOF (fim inesperado do arquivo)
-except IndexError:
-    #Se terminou em um estado de comentário:
-    if(estado == estado_comentario):
-        #Adiciona a mensagem de erro para comentário não finalizado
-        output += '{, erro("comentario nao finalizado")\n'
-    #Se terminou durante uma iteração não finalizada do autômato
-    elif(estado != estado_inicial):
-        #Finaliza a transição e escreve a cadeia lida no texto de saída 
-        func_output, index = estados_finais[tabela_outros[estado]](cadeia, index)
-        output += func_output
-
+    #Tratamento do erro EOF (fim inesperado do arquivo)
+    except IndexError:
+        #Se terminou em um estado de comentário:
+        if(estado == estado_comentario):
+            #Adiciona a mensagem de erro para comentário não finalizado
+            output += '{, erro("comentario nao finalizado")\n'
+        #Se terminou durante uma iteração não finalizada do autômato
+        elif(estado != estado_inicial):
+            #Finaliza a transição e escreve a cadeia lida no texto de saída 
+            func_output, index = estados_finais[tabela_outros[estado]](cadeia, index)
+            output += func_output
+    
+    return output
+'''
 #Abre o arquivo de saída
 output_file = open("output.txt", 'w')
 #Escreve o texto de saída no arquivo de saída
 output_file.write(output)
 #Fecha o arquivo de saída
 output_file.close()
-
+'''
