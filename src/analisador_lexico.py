@@ -33,6 +33,7 @@ tabela_simb_reservados = {
     'write' : 'simb_write',
     'read' : 'simb_read',
     'for' : 'simb_for',
+    'then' : 'simb_then',
     'procedure' : 'simb_procedure',
     'to' : 'simb_to',
     'const' : 'simb_const'

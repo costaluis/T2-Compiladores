@@ -1,4 +1,5 @@
 from os import linesep
+from sys import exec_prefix
 from analisador_lexico import *
 import re
 
@@ -64,7 +65,6 @@ def programa():
     else:
         print('Erro')
 
-
 def corpo():
     dc()
     if(token == 'simb_begin'):
@@ -77,13 +77,11 @@ def corpo():
     else:
         print("Erro")
 
-
 def dc():
     dc_c()
     dc_v()
     dc_p()
     return
-
 
 def dc_c():
     if(token == 'simb_const'):
@@ -106,7 +104,6 @@ def dc_c():
     else:
         return
 
-
 def dc_v():
     if(token == 'simb_var'):
         get_token()
@@ -125,13 +122,11 @@ def dc_v():
     else:
         return
 
-
 def tipo_var():
     if(token == 'simb_tipo'):
         return
     else:
         print("Erro")
-
 
 def variaveis():
     if(token == 'id'):
@@ -141,7 +136,6 @@ def variaveis():
     else:
         print("Erro")
 
-
 def mais_var():
     if(token == 'simb_virg'):
         get_token()
@@ -149,7 +143,6 @@ def mais_var():
         return
     else:
         return
-
 
 def dc_p():
     if(token == 'simb_procedure'):
@@ -168,7 +161,6 @@ def dc_p():
     else:
         return
 
-
 def parametros():
     if(token == 'simb_apar'):
         get_token()
@@ -180,7 +172,6 @@ def parametros():
     else:
         return
 
-
 def lista_par():
     variaveis()
     if(token == 'simb_dp'):
@@ -191,7 +182,6 @@ def lista_par():
     else:
         print("Erro")
 
-
 def mais_par():
     if(token == 'simb_pv'):
         get_token()
@@ -199,7 +189,6 @@ def mais_par():
         return
     else:
         return
-
 
 def corpo_p():
     dc_loc()
@@ -218,11 +207,9 @@ def corpo_p():
     else:
         print("Erro")
 
-
 def dc_loc():
     dc_v()
     return
-
 
 def lista_arg():
     if(token == 'simb_apar'):
@@ -236,7 +223,6 @@ def lista_arg():
     else:
         return
 
-
 def argumentos():
     if(token == 'id'):
         get_token()
@@ -244,7 +230,6 @@ def argumentos():
         return
     else:
         print("Erro")
-
 
 def mais_ident():
     if(token == 'simb_pv'):
@@ -254,7 +239,6 @@ def mais_ident():
     else:
         return
 
-
 def pfalsa():
     if(token == 'simb_else'):
         get_token()
@@ -262,7 +246,6 @@ def pfalsa():
         return
     else:
         return
-
 
 def comandos():
     if(token in P['cmd']):
@@ -276,11 +259,216 @@ def comandos():
     else:
         return
 
+def cmd():
+    if(token == 'simb_read'):
+        get_token()
+        if(token == 'simb_apar'):
+            get_token()
+            variaveis()
+            if(token == 'simb_fpar'):
+                get_token()
+                return
+            else:
+                print("Erro")
+        else:
+            print("Erro")
+    elif(token == 'simb_write'):
+        get_token()
+        if(token == 'simb_apar'):
+            get_token()
+            variaveis()
+            if(token == 'simb_fpar'):
+                get_token()
+                return
+            else:
+                print("Erro")
+        else:
+            print("Erro")
+    elif(token == 'simb_while'):
+        get_token()
+        if(token == 'simb_apar'):
+            get_token()
+            condicao()
+            if(token == 'simb_fpar'):
+                get_token()
+                if(token == 'simb_do'):
+                    get_token()
+                    cmd()
+                    return
+                else:
+                    print("Erro")
+            else:
+                print("Erro")
+        else:
+            print("Erro")
+    elif(token == 'simb_if'):
+        get_token()
+        condicao()
+        if(token == 'simb_then'):
+            get_token()
+            cmd()
+            pfalsa()
+            return
+        else:
+            print("Erro")
+    elif(token == 'id'):
+        get_token()
+        ident()
+        return
+    elif(token == 'simb_begin'):
+        get_token()
+        comandos()
+        if(token == 'simb_end'):
+            get_token()
+            return
+        else:
+            print("Erro")
+    elif(token == 'simb_for'):
+        get_token()
+        if(token == 'id'):
+            get_token()
+            if(token == 'simb_atrib'):
+                get_token()
+                expressao()
+                if(token == 'simb_to'):
+                    get_token()
+                    expressao()
+                    cmd()
+                    return
+                else:
+                    print("Erro")
+            else:
+                print("Erro")
+        else:
+            print("Erro")
+    else:
+        print("Erro")
 
+def ident():
+    if(token == 'simb_atrib'):
+        get_token()
+        expressao()
+        return
+    else:
+        lista_arg()
+        return
 
+def condicao():
+    expressao()
+    relacao()
+    expressao()
+    return
 
+def relacao():
+    if(token == 'simb_igual'):
+        get_token()
+        return
+    elif(token == 'simb_dif'):
+        get_token()
+        return
+    elif(token == 'simb_maior_igual'):
+        get_token()
+        return
+    elif(token == 'simb_menor_igual'):
+        get_token()
+        return
+    elif(token == 'simb_maior'):
+        get_token()
+        return
+    elif(token == 'simb_menor'):
+        get_token()
+        return
+    else:
+        print("Erro")
+
+def expressao():
+    termo()
+    outros_termos()
+    return
+
+def op_num():
+    if(token == 'simb_mais'):
+        get_token()
+        return
+    elif(token == 'simb_menos'):
+        get_token()
+        return
+    else:
+        return
+
+def outros_termos():
+    if(token in P['op_ad']):
+        op_ad()
+        termo()
+        outros_termos()
+    else:
+        return
+
+def op_ad():
+    if(token == 'simb_mais'):
+        get_token()
+        return
+    elif(token == 'simb_menos'):
+        get_token()
+        return
+    else:
+        print("Erro")
+
+def termo():
+    op_un()
+    fator()
+    mais_fatores()
+    return
+
+def mais_fatores():
+    if(token in P['op_mul']):
+        op_mul()
+        fator()
+        mais_fatores()
+        return
+    else:
+        return
+
+def op_mul():
+    if(token == 'simb_mult'):
+        get_token()
+        return
+    elif(token == 'simb_div'):
+        get_token()
+        return
+    else:
+        print("Erro")
+
+def fator():
+    if(token == 'id'):
+        get_token()
+        return
+    elif(token == 'simb_apar'):
+        get_token()
+        expressao()
+        if(token == 'simb_fpar'):
+            get_token()
+            return
+        else:
+            print("Erro")
+    elif(token in P['numero']):
+        numero()
+        return
+    else:
+        print("Erro")
+
+def numero():
+    if(token == 'num_int'):
+        get_token()
+        return
+    elif(token == 'num_real'):
+        get_token()
+        return
+    else:
+        print("Erro")
 
         
+
 
 def __main__():
     get_token()
