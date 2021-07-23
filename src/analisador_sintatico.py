@@ -20,7 +20,6 @@ linha = f.readline()
 cont_linha = 1
 
 
-
 erro_regex = 'erro\\(\\"(.*)\\"\\)'
 def get_token():
     global linha
