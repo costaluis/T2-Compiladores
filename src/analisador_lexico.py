@@ -34,7 +34,8 @@ tabela_simb_reservados = {
     'read' : 'simb_read',
     'for' : 'simb_for',
     'procedure' : 'simb_procedure',
-    'to' : 'simb_to'
+    'to' : 'simb_to',
+    'const' : 'simb_const'
 }
 
 #Função de saída do estado q2 com retroceder
