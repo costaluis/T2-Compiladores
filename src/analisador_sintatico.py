@@ -50,104 +50,125 @@ def get_token():
 
     return fim
 
-def programa():
+
+def programa(S):
     if(token == 'simb_program'):
         get_token()
-        if(token == 'id'):
-            get_token()
-            if(token == 'simb_pv'):
-                get_token()
-                corpo()
-                if(token == 'simb_p'):
-                    return
-                else:
-                    error_func()
-            else:
-                error_func()
-        else:
-            error_func()
     else:
-        error_func()
+        print("Erro sintático na linha {}: 'program' esperado".format(cont_linha))
+        error_func(S + 'id')
+    if(token == 'id'):
+        get_token()
+    else:
+        print("Erro sintático na linha {}: identificador esperado".format(cont_linha))
+        error_func(S + 'simb_pv')
+    if(token == 'simb_pv'):
+        get_token()
+    else:
+        print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
+        error_func(S + P['corpo'])
+    corpo('simb_p' + S)
+    
+    if(token == 'simb_p'):
+        get_token()
+    else:
+        print("Erro sintático na linha {}: '.' esperado".format(cont_linha))
+        error_func(S)
+    
 
-def corpo():
-    dc()
+def corpo(S):
+    dc('simb_begin' + S)
     if(token == 'simb_begin'):
         get_token()
-        comandos()
-        if(token == 'simb_end'):
-            get_token()
-        else:
-            error_func()
     else:
-        error_func()
+        print("Erro sintático na linha {}: 'begin' esperado".format(cont_linha))
+        error_func(S + P['comandos'])
+    comandos('simb_end' + S)
+    
+    if(token == 'simb_end'):
+        get_token()
+    else:
+        print("Erro sintático na linha {}: 'end' esperado".format(cont_linha))
+        error_func(S)
+    
 
-def dc():
-    dc_c()
-    dc_v()
-    dc_p()
-    return
+def dc(S):
+    dc_c(P['dc_v'] + S)
+    dc_v(P['dc_p'] + S)
+    dc_p(S)
 
-def dc_c():
+
+def dc_c(S):
     if(token == 'simb_const'):
         get_token()
         if(token == 'id'):
             get_token()
-            if(token == 'simb_igual'):
-                get_token()
-                numero()
-                if(token == 'simb_pv'):
-                    get_token()
-                    dc_c()
-                    return
-                else:
-                    error_func()
-            else:
-                error_func()
         else:
-            error_func()
+            print("Erro sintático na linha {}: identificador esperado".format(cont_linha))
+            error_func(S + 'simb_igual')
+        if(token == 'simb_igual'):
+            get_token()
+        else:
+            print("Erro sintático na linha {}: '=' esperado".format(cont_linha))
+            error_func(S, P['numero'])
+        numero('simb_pv' + S)
+        
+        if(token == 'simb_pv'):
+            get_token()
+        else:
+            print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
+            error_func(S, P['dc_c'])
+        dc_c(S)
+        
     else:
         return
 
-def dc_v():
+def dc_v(S):
     if(token == 'simb_var'):
         get_token()
-        variaveis()
-        if(token == 'simb_dp'):
-            get_token()
-            tipo_var()
-            if(token == 'simb_pv'):
-                get_token()
-                dc_v()
-                return
-            else:
-                error_func()
-        else:
-            error_func()
     else:
-        return
+        print("Erro sintático na linha {}: 'var' esperado".format(cont_linha))
+        error_func(S + P['variaveis'])
+    variaveis('simb_pv' + S)
+    
+    if(token == 'simb_dp'):
+        get_token()
+    else:
+        print("Erro sintático na linha {}: ':' esperado".format(cont_linha))
+        error_func(S + P['tipo_var'])
+    tipo_var('simb_pv' + S)
+    
+    if(token == 'simb_pv'):
+        get_token()
+    else:
+        print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
+        error_func(S + P['dc_v'])
+    dc_v(S)
 
-def tipo_var():
+
+def tipo_var(S):
     if(token == 'simb_tipo'):
         get_token()
-        return
     else:
-        error_func()
+        print("Erro sintático na linha {}: tipo da variável esperado".format(cont_linha))
+        error_func(S)
 
-def variaveis():
+
+def variaveis(S):
     if(token == 'id'):
         get_token()
-        mais_var()
-        return
     else:
-        error_func()
+        error_func(S + P['mais_var'])
+    mais_var(S)
 
-def mais_var():
+
+def mais_var(S):
     if(token == 'simb_virg'):
         get_token()
-        variaveis()
-        return
     else:
         return
+    variaveis(S)
+
 
 def dc_p():
     if(token == 'simb_procedure'):
@@ -155,22 +176,24 @@ def dc_p():
         if(token == 'id'):
             get_token()
             parametros()
-            if(token == 'simb_pv'):
-                corpo_p()
-                dc_p()
-                return
-            else:
-                error_func()
+        else:
+            error_func()
+        if(token == 'simb_pv'):
+            corpo_p()
+            dc_p()
+            return
         else:
             error_func()
     else:
         return
+
 
 def parametros():
     if(token == 'simb_apar'):
         get_token()
         lista_par()
         if(token == 'simb_fpar'):
+            get_token()
             return
         else:
             error_func()
@@ -200,17 +223,19 @@ def corpo_p():
     if(token == 'simb_begin'):
         get_token()
         comandos()
-        if(token == 'simb_end'):
-            get_token()
-            if(token == 'simb_pv'):
-                get_token()
-                return
-            else:
-                error_func()
-        else:
-            error_func()
     else:
         error_func()
+    if(token == 'simb_end'):
+        get_token()
+    else:
+        error_func()
+    if(token == 'simb_pv'):
+        get_token()
+        return
+    else:
+        error_func()
+        
+    
 
 def dc_loc():
     dc_v()
@@ -270,11 +295,11 @@ def cmd():
         if(token == 'simb_apar'):
             get_token()
             variaveis()
-            if(token == 'simb_fpar'):
-                get_token()
-                return
-            else:
-                error_func()
+        else:
+            error_func()
+        if(token == 'simb_fpar'):
+            get_token()
+            return
         else:
             error_func()
     elif(token == 'simb_write'):
@@ -282,30 +307,32 @@ def cmd():
         if(token == 'simb_apar'):
             get_token()
             variaveis()
-            if(token == 'simb_fpar'):
-                get_token()
-                return
-            else:
-                error_func()
         else:
             error_func()
+        if(token == 'simb_fpar'):
+            get_token()
+            return
+        else:
+            error_func()
+
     elif(token == 'simb_while'):
         get_token()
         if(token == 'simb_apar'):
             get_token()
             condicao()
-            if(token == 'simb_fpar'):
-                get_token()
-                if(token == 'simb_do'):
-                    get_token()
-                    cmd()
-                    return
-                else:
-                    error_func()
-            else:
-                error_func()
         else:
             error_func()
+        if(token == 'simb_fpar'):
+            get_token()
+        else:
+            error_func()
+        if(token == 'simb_do'):
+            get_token()
+            cmd()
+            return
+        else:
+            error_func()
+        
     elif(token == 'simb_if'):
         get_token()
         condicao()
@@ -316,10 +343,12 @@ def cmd():
             return
         else:
             error_func()
+
     elif(token == 'id'):
         get_token()
         ident()
         return
+
     elif(token == 'simb_begin'):
         get_token()
         comandos()
@@ -328,28 +357,30 @@ def cmd():
             return
         else:
             error_func()
+
     elif(token == 'simb_for'):
         get_token()
         if(token == 'id'):
             get_token()
-            if(token == 'simb_atrib'):
-                get_token()
-                expressao()
-                if(token == 'simb_to'):
-                    get_token()
-                    expressao()
-                    if(token == 'simb_do'):
-                        get_token()
-                        cmd()
-                        return
-                    else:
-                        error_func()
-                else:
-                    error_func()
-            else:
-                error_func()
         else:
             error_func()
+        if(token == 'simb_atrib'):
+            get_token()
+            expressao()
+        else:
+            error_func()
+        if(token == 'simb_to'):
+            get_token()
+            expressao()
+        else:
+            error_func()
+        if(token == 'simb_do'):
+            get_token()
+            cmd()
+            return
+        else:
+            error_func()
+
     else:
         error_func()
 
@@ -362,8 +393,9 @@ def ident():
         lista_arg()
         return
 
+
 def condicao():
-    expressao()
+    expressao() 
     relacao()
     expressao()
     return
