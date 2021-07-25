@@ -170,343 +170,319 @@ def mais_var(S):
     variaveis(S)
 
 
-def dc_p():
+def dc_p(S):
     if(token == 'simb_procedure'):
         get_token()
         if(token == 'id'):
             get_token()
-            parametros()
         else:
-            error_func()
+            error_func(P['parametros'] + S)
+        parametros('simb_pv' + S)
+        
         if(token == 'simb_pv'):
-            corpo_p()
-            dc_p()
-            return
+            get_token()
         else:
-            error_func()
+            error_func(P['corpo_p'] + S)
+        corpo_p(P['dc_p' + S])
+        dc_p(S)
+
     else:
         return
 
 
-def parametros():
+def parametros(S):
     if(token == 'simb_apar'):
         get_token()
-        lista_par()
+        lista_par('simb_fpar' + S)
         if(token == 'simb_fpar'):
             get_token()
-            return
         else:
-            error_func()
+            error_func(S)
+        
     else:
         return
 
-def lista_par():
-    variaveis()
+def lista_par(S):
+    variaveis('simb_dp' + S)
     if(token == 'simb_dp'):
         get_token()
-        tipo_var()
-        mais_par()
-        return
     else:
-        error_func()
+        error_func(P['tipo_var' + S])
+    tipo_var(P['mais_par' + S])
+    mais_par(S)
 
-def mais_par():
+
+def mais_par(S):
     if(token == 'simb_pv'):
         get_token()
-        lista_par()
-        return
+        lista_par(S)
     else:
         return
 
-def corpo_p():
-    dc_loc()
+
+def corpo_p(S):
+    dc_loc('simb_begin' + S)
     if(token == 'simb_begin'):
         get_token()
-        comandos()
     else:
-        error_func()
+        error_func(P['comandos' + S])
+    comandos('simb_end' + S)
+    
     if(token == 'simb_end'):
         get_token()
     else:
-        error_func()
+        error_func('simb_pv' + S)
     if(token == 'simb_pv'):
         get_token()
-        return
     else:
-        error_func()
+        error_func(S)
         
-    
 
-def dc_loc():
-    dc_v()
-    return
+def dc_loc(S):
+    dc_v(S)
 
-def lista_arg():
+
+def lista_arg(S):
     if(token == 'simb_apar'):
         get_token()
-        argumentos()
+        argumentos('simb_fpar' + S)
         if(token == 'simb_fpar'):
             get_token()
-            return
         else:
-            error_func()
+            error_func(S)
     else:
         return
 
-def argumentos():
+def argumentos(S):
     if(token == 'id'):
         get_token()
-        mais_ident()
-        return
     else:
-        error_func()
+        error_func(P['mais_ident'])
+    mais_ident(S)
 
-def mais_ident():
+
+def mais_ident(S):
     if(token == 'simb_pv'):
         get_token()
-        argumentos()
-        return
+        argumentos(S)
     else:
         return
 
-def pfalsa():
+def pfalsa(S):
     if(token == 'simb_else'):
         get_token()
-        cmd()
-        return
+        cmd(S)
     else:
         return
 
-def comandos():
+def comandos(S):
     if(token in P['cmd']):
-        cmd()
+        cmd('simb_pv' + S)
         if(token == 'simb_pv'):
             get_token()
-            comandos()
-            return
         else:
-            error_func()
+            error_func(P['comandos' + S])
+        comandos(S)
     else:
         return
 
-def cmd():
+def cmd(S):
     if(token == 'simb_read'):
         get_token()
         if(token == 'simb_apar'):
             get_token()
-            variaveis()
         else:
-            error_func()
+            error_func(P['variaveis'] + S)
+        variaveis('simb_fpar' + S)
+
         if(token == 'simb_fpar'):
             get_token()
-            return
         else:
-            error_func()
+            error_func(S)
+
     elif(token == 'simb_write'):
         get_token()
         if(token == 'simb_apar'):
             get_token()
-            variaveis()
         else:
-            error_func()
+            error_func(P['variaveis'] + S)
+        variaveis('simb_fpar' + S)
+        
         if(token == 'simb_fpar'):
             get_token()
-            return
         else:
-            error_func()
+            error_func(S)
 
     elif(token == 'simb_while'):
         get_token()
         if(token == 'simb_apar'):
             get_token()
-            condicao()
         else:
-            error_func()
+            error_func(P['condicao'] + S)
+        condicao('simb_fpar' + S)
+
         if(token == 'simb_fpar'):
             get_token()
         else:
-            error_func()
+            error_func('simb_do' + S)
         if(token == 'simb_do'):
             get_token()
-            cmd()
-            return
         else:
-            error_func()
+            error_func(P['cmd'] + S)
+        cmd(S)
         
     elif(token == 'simb_if'):
         get_token()
-        condicao()
+        condicao('simb_then' + S)
         if(token == 'simb_then'):
             get_token()
-            cmd()
-            pfalsa()
-            return
         else:
-            error_func()
+            error_func(P['cmd' + S])
+        cmd(P['pfalsa' + S])
+        pfalsa(S)
 
     elif(token == 'id'):
         get_token()
-        ident()
-        return
+        ident(S)
 
     elif(token == 'simb_begin'):
         get_token()
-        comandos()
+        comandos('simb_end' + S)
         if(token == 'simb_end'):
             get_token()
-            return
         else:
-            error_func()
+            error_func(S)
 
     elif(token == 'simb_for'):
         get_token()
         if(token == 'id'):
             get_token()
         else:
-            error_func()
+            error_func('simb_atrib' + S)
         if(token == 'simb_atrib'):
             get_token()
-            expressao()
         else:
-            error_func()
+            error_func(P['expressao'] + S)
+        expressao('simb_to' + S)
+        
         if(token == 'simb_to'):
             get_token()
-            expressao()
         else:
-            error_func()
+            error_func(P['expressao'] + S)
+        expressao('simb_do' + S)
+
         if(token == 'simb_do'):
             get_token()
-            cmd()
-            return
         else:
-            error_func()
+            error_func(P['cmd'] + S)
+        cmd(S)
 
     else:
-        error_func()
+        error_func(S)
 
-def ident():
+def ident(S):
     if(token == 'simb_atrib'):
         get_token()
-        expressao()
-        return
+        expressao(S)
     else:
-        lista_arg()
-        return
+        lista_arg(S)
 
 
-def condicao():
-    expressao() 
-    relacao()
-    expressao()
-    return
+def condicao(S):
+    expressao(P['relacao'] + S) 
+    relacao(P['expressao'] + S)
+    expressao(S)
 
-def relacao():
+def relacao(S):
     if(token == 'simb_igual'):
         get_token()
-        return
     elif(token == 'simb_dif'):
         get_token()
-        return
     elif(token == 'simb_maior_igual'):
         get_token()
-        return
     elif(token == 'simb_menor_igual'):
         get_token()
-        return
     elif(token == 'simb_maior'):
         get_token()
-        return
     elif(token == 'simb_menor'):
         get_token()
-        return
     else:
-        error_func()
+        error_func(S)
 
-def expressao():
-    termo()
-    outros_termos()
+def expressao(S):
+    termo(P['outros_termos'])
+    outros_termos(S)
     return
 
-def op_un():
+def op_un(S):
     if(token == 'simb_mais'):
         get_token()
-        return
     elif(token == 'simb_menos'):
         get_token()
-        return
     else:
         return
 
-def outros_termos():
+def outros_termos(S):
     if(token in P['op_ad']):
-        op_ad()
-        termo()
-        outros_termos()
+        op_ad(P['termo' + S])
+        termo(P['outros_termos'] + S)
+        outros_termos(S)
     else:
         return
 
-def op_ad():
+def op_ad(S):
     if(token == 'simb_mais'):
         get_token()
-        return
     elif(token == 'simb_menos'):
         get_token()
-        return
     else:
-        error_func()
+        error_func(S)
 
-def termo():
-    op_un()
-    fator()
-    mais_fatores()
-    return
+def termo(S):
+    op_un(P['fator'] + S)
+    fator(P['mais_fatores'] + S)
+    mais_fatores(S)
 
-def mais_fatores():
+def mais_fatores(S):
     if(token in P['op_mul']):
-        op_mul()
-        fator()
-        mais_fatores()
-        return
+        op_mul(P['fator'] + S)
+        fator(P['mais_fatores'] + S)
+        mais_fatores(S)
     else:
         return
 
-def op_mul():
+
+def op_mul(S):
     if(token == 'simb_mult'):
         get_token()
-        return
     elif(token == 'simb_div'):
         get_token()
-        return
     else:
-        error_func()
+        error_func(S)
 
-def fator():
+
+def fator(S):
     if(token == 'id'):
         get_token()
-        return
     elif(token == 'simb_apar'):
         get_token()
-        expressao()
+        expressao('simb_fpar' + S)
         if(token == 'simb_fpar'):
             get_token()
-            return
         else:
-            error_func()
+            error_func(S)
     elif(token in P['numero']):
-        numero()
-        return
+        numero(S)
     else:
-        error_func()
+        error_func(S)
 
-def numero():
+def numero(S):
     if(token == 'num_int'):
         get_token()
-        return
     elif(token == 'num_real'):
         get_token()
-        return
     else:
-        error_func()
+        error_func(S)
 
 P = {
     'numero': ['num_int', 'num_real'],
