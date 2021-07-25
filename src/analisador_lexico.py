@@ -205,6 +205,8 @@ for digit in string.digits:
     automato['q17'][digit] = 'q18'
     automato['q18'][digit] = 'q18'
 
+automato['q1']['_'] = 'q1'
+
 #Tabela que define transições para outros caracteres
 tabela_outros = {
     'q0' : 'q29',

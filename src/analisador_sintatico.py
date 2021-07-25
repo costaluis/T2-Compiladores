@@ -20,8 +20,9 @@ token = ''
 linha = f.readline()
 cont_linha = 1
 
-def error_func():
-    raise RuntimeError('Erro')
+def error_func(S):
+    while(token not in S):
+        get_token()
 
 
 erro_regex = 'erro\\(\\"(.*)\\"\\)'
@@ -31,24 +32,31 @@ def get_token():
     global token
     
     fim = False
-    token = analisador_lexico(linha)
-    cadeia = token.split(', ')
+    while(True):
+        cadeia = analisador_lexico(linha)
+        if(cadeia != ''):
+            break
+        linha = f.readline()
+        cont_linha += 1
+        if(len(linha) == 0):
+            return
+
+    cadeia = cadeia.split(', ')
+
     token = cadeia[1].replace('\n', '')
     var = re.match(erro_regex, cadeia[1])
     if(var):
         print('Erro léxico na linha {}: '.format(cont_linha), var.groups()[0])
     linha = linha.replace(cadeia[0],'', 1)
     linha = linha.strip()
-    if(linha):
+'''    if(linha):
         if(linha[0]=='{' and linha[len(linha)-1]=='}'):
             linha=''
     if(not linha):
         linha = f.readline()
         cont_linha += 1
         if(not linha):
-            fim = True
-
-    return fim
+            fim = True'''
 
 
 def programa(S):
@@ -56,18 +64,18 @@ def programa(S):
         get_token()
     else:
         print("Erro sintático na linha {}: 'program' esperado".format(cont_linha))
-        error_func(S + 'id')
+        error_func(['id'] + S)
     if(token == 'id'):
         get_token()
     else:
         print("Erro sintático na linha {}: identificador esperado".format(cont_linha))
-        error_func(S + 'simb_pv')
+        error_func(['simb_pv'] + S)
     if(token == 'simb_pv'):
         get_token()
     else:
         print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
-        error_func(S + P['corpo'])
-    corpo('simb_p' + S)
+        error_func(P['corpo'] + ['simb_p'] + S)
+    corpo(['simb_p'] + S)
     
     if(token == 'simb_p'):
         get_token()
@@ -77,13 +85,13 @@ def programa(S):
     
 
 def corpo(S):
-    dc('simb_begin' + S)
+    dc(['simb_begin'] + S)
     if(token == 'simb_begin'):
         get_token()
     else:
         print("Erro sintático na linha {}: 'begin' esperado".format(cont_linha))
-        error_func(S + P['comandos'])
-    comandos('simb_end' + S)
+        error_func(P['comandos'] + ['simb_end'] + S)
+    comandos(['simb_end'] + S)
     
     if(token == 'simb_end'):
         get_token()
@@ -93,7 +101,7 @@ def corpo(S):
     
 
 def dc(S):
-    dc_c(P['dc_v'] + S)
+    dc_c(P['dc_v'] + P['dc_p'] + S)
     dc_v(P['dc_p'] + S)
     dc_p(S)
 
@@ -105,19 +113,19 @@ def dc_c(S):
             get_token()
         else:
             print("Erro sintático na linha {}: identificador esperado".format(cont_linha))
-            error_func(S + 'simb_igual')
+            error_func(['simb_igual'] + S)
         if(token == 'simb_igual'):
             get_token()
         else:
             print("Erro sintático na linha {}: '=' esperado".format(cont_linha))
-            error_func(S, P['numero'])
-        numero('simb_pv' + S)
+            error_func(P['numero'] + S)
+        numero(['simb_pv'] + S)
         
         if(token == 'simb_pv'):
             get_token()
         else:
             print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
-            error_func(S, P['dc_c'])
+            error_func(P['dc_c'] + S)
         dc_c(S)
         
     else:
@@ -126,24 +134,22 @@ def dc_c(S):
 def dc_v(S):
     if(token == 'simb_var'):
         get_token()
+        variaveis(['simb_dp'] + S)
+        if(token == 'simb_dp'):
+            get_token()
+        else:
+            print("Erro sintático na linha {}: ':' esperado".format(cont_linha))
+            error_func(P['tipo_var'] + S)
+        tipo_var(['simb_pv'] + S)
+        
+        if(token == 'simb_pv'):
+            get_token()
+        else:
+            print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
+            error_func(P['dc_v'] + S)
+        dc_v(S)
     else:
-        print("Erro sintático na linha {}: 'var' esperado".format(cont_linha))
-        error_func(S + P['variaveis'])
-    variaveis('simb_pv' + S)
-    
-    if(token == 'simb_dp'):
-        get_token()
-    else:
-        print("Erro sintático na linha {}: ':' esperado".format(cont_linha))
-        error_func(S + P['tipo_var'])
-    tipo_var('simb_pv' + S)
-    
-    if(token == 'simb_pv'):
-        get_token()
-    else:
-        print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
-        error_func(S + P['dc_v'])
-    dc_v(S)
+        return
 
 
 def tipo_var(S):
@@ -158,7 +164,8 @@ def variaveis(S):
     if(token == 'id'):
         get_token()
     else:
-        error_func(S + P['mais_var'])
+        print("Erro sintático na linha {}: identificador esperado".format(cont_linha))
+        error_func(P['mais_var'] + S)
     mais_var(S)
 
 
@@ -176,14 +183,16 @@ def dc_p(S):
         if(token == 'id'):
             get_token()
         else:
-            error_func(P['parametros'] + S)
-        parametros('simb_pv' + S)
+            print("Erro sintático na linha {}: identificador esperado".format(cont_linha))
+            error_func(P['parametros'] + ['simb_pv'] + S)
+        parametros(['simb_pv'] + S)
         
         if(token == 'simb_pv'):
             get_token()
         else:
-            error_func(P['corpo_p'] + S)
-        corpo_p(P['dc_p' + S])
+            print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
+            error_func(P['corpo_p'] + P['dc_p'] + S)
+        corpo_p(P['dc_p'] + S)
         dc_p(S)
 
     else:
@@ -193,22 +202,24 @@ def dc_p(S):
 def parametros(S):
     if(token == 'simb_apar'):
         get_token()
-        lista_par('simb_fpar' + S)
+        lista_par(['simb_fpar'] + S)
         if(token == 'simb_fpar'):
             get_token()
         else:
+            print("Erro sintático na linha {}: ')' esperado".format(cont_linha))
             error_func(S)
         
     else:
         return
 
 def lista_par(S):
-    variaveis('simb_dp' + S)
+    variaveis(['simb_dp'] + S)
     if(token == 'simb_dp'):
         get_token()
     else:
-        error_func(P['tipo_var' + S])
-    tipo_var(P['mais_par' + S])
+        print("Erro sintático na linha {}: ':' esperado".format(cont_linha))
+        error_func(P['tipo_var'] + S)
+    tipo_var(P['mais_par'] + S)
     mais_par(S)
 
 
@@ -221,20 +232,23 @@ def mais_par(S):
 
 
 def corpo_p(S):
-    dc_loc('simb_begin' + S)
+    dc_loc(['simb_begin'] + S)
     if(token == 'simb_begin'):
         get_token()
     else:
-        error_func(P['comandos' + S])
-    comandos('simb_end' + S)
+        print("Erro sintático na linha {}: 'begin' esperado".format(cont_linha))
+        error_func(P['comandos'] + ['simb_end'] + S)
+    comandos(['simb_end'] + S)
     
     if(token == 'simb_end'):
         get_token()
     else:
-        error_func('simb_pv' + S)
+        print("Erro sintático na linha {}: 'end' esperado".format(cont_linha))
+        error_func(['simb_pv'] + S)
     if(token == 'simb_pv'):
         get_token()
     else:
+        print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
         error_func(S)
         
 
@@ -245,10 +259,11 @@ def dc_loc(S):
 def lista_arg(S):
     if(token == 'simb_apar'):
         get_token()
-        argumentos('simb_fpar' + S)
+        argumentos(['simb_fpar'] + S)
         if(token == 'simb_fpar'):
             get_token()
         else:
+            print("Erro sintático na linha {}: ')' esperado".format(cont_linha))
             error_func(S)
     else:
         return
@@ -257,7 +272,8 @@ def argumentos(S):
     if(token == 'id'):
         get_token()
     else:
-        error_func(P['mais_ident'])
+        print("Erro sintático na linha {}: identificador esperado".format(cont_linha))
+        error_func(P['mais_ident'] + S)
     mais_ident(S)
 
 
@@ -277,11 +293,12 @@ def pfalsa(S):
 
 def comandos(S):
     if(token in P['cmd']):
-        cmd('simb_pv' + S)
+        cmd(['simb_pv'] + S)
         if(token == 'simb_pv'):
             get_token()
         else:
-            error_func(P['comandos' + S])
+            print("Erro sintático na linha {}: ';' esperado".format(cont_linha))
+            error_func(P['comandos'] + S)
         comandos(S)
     else:
         return
@@ -292,12 +309,14 @@ def cmd(S):
         if(token == 'simb_apar'):
             get_token()
         else:
+            print("Erro sintático na linha {}: '(' esperado".format(cont_linha))
             error_func(P['variaveis'] + S)
-        variaveis('simb_fpar' + S)
+        variaveis(['simb_fpar'] + S)
 
         if(token == 'simb_fpar'):
             get_token()
         else:
+            print("Erro sintático na linha {}: ')' esperado".format(cont_linha))
             error_func(S)
 
     elif(token == 'simb_write'):
@@ -305,12 +324,14 @@ def cmd(S):
         if(token == 'simb_apar'):
             get_token()
         else:
+            print("Erro sintático na linha {}: '(' esperado".format(cont_linha))
             error_func(P['variaveis'] + S)
-        variaveis('simb_fpar' + S)
+        variaveis(['simb_fpar'] + S)
         
         if(token == 'simb_fpar'):
             get_token()
         else:
+            print("Erro sintático na linha {}: ')' esperado".format(cont_linha))
             error_func(S)
 
     elif(token == 'simb_while'):
@@ -318,27 +339,31 @@ def cmd(S):
         if(token == 'simb_apar'):
             get_token()
         else:
+            print("Erro sintático na linha {}: '(' esperado".format(cont_linha))
             error_func(P['condicao'] + S)
-        condicao('simb_fpar' + S)
+        condicao(['simb_fpar'] + S)
 
         if(token == 'simb_fpar'):
             get_token()
         else:
-            error_func('simb_do' + S)
+            print("Erro sintático na linha {}: ')' esperado".format(cont_linha))
+            error_func(['simb_do'] + S)
         if(token == 'simb_do'):
             get_token()
         else:
+            print("Erro sintático na linha {}: 'do' esperado".format(cont_linha))
             error_func(P['cmd'] + S)
         cmd(S)
         
     elif(token == 'simb_if'):
         get_token()
-        condicao('simb_then' + S)
+        condicao(['simb_then'] + S)
         if(token == 'simb_then'):
             get_token()
         else:
-            error_func(P['cmd' + S])
-        cmd(P['pfalsa' + S])
+            print("Erro sintático na linha {}: 'then' esperado".format(cont_linha))
+            error_func(P['cmd'] + S)
+        cmd(P['pfalsa'] + S)
         pfalsa(S)
 
     elif(token == 'id'):
@@ -347,10 +372,11 @@ def cmd(S):
 
     elif(token == 'simb_begin'):
         get_token()
-        comandos('simb_end' + S)
+        comandos(['simb_end'] + S)
         if(token == 'simb_end'):
             get_token()
         else:
+            print("Erro sintático na linha {}: 'end' esperado".format(cont_linha))
             error_func(S)
 
     elif(token == 'simb_for'):
@@ -358,26 +384,31 @@ def cmd(S):
         if(token == 'id'):
             get_token()
         else:
-            error_func('simb_atrib' + S)
+            print("Erro sintático na linha {}: identificador esperado".format(cont_linha))
+            error_func(['simb_atrib'] + S)
         if(token == 'simb_atrib'):
             get_token()
         else:
+            print("Erro sintático na linha {}: ':=' esperado".format(cont_linha))
             error_func(P['expressao'] + S)
-        expressao('simb_to' + S)
+        expressao(['simb_to'] + S)
         
         if(token == 'simb_to'):
             get_token()
         else:
+            print("Erro sintático na linha {}: 'to' esperado".format(cont_linha))
             error_func(P['expressao'] + S)
-        expressao('simb_do' + S)
+        expressao(['simb_do'] + S)
 
         if(token == 'simb_do'):
             get_token()
         else:
+            print("Erro sintático na linha {}: 'do' esperado".format(cont_linha))
             error_func(P['cmd'] + S)
         cmd(S)
 
     else:
+        print("Erro sintático na linha {}: comando esperado".format(cont_linha))
         error_func(S)
 
 def ident(S):
@@ -407,10 +438,11 @@ def relacao(S):
     elif(token == 'simb_menor'):
         get_token()
     else:
+        print("Erro sintático na linha {}: comparação esperada".format(cont_linha))
         error_func(S)
 
 def expressao(S):
-    termo(P['outros_termos'])
+    termo(P['outros_termos'] + S)
     outros_termos(S)
     return
 
@@ -424,7 +456,7 @@ def op_un(S):
 
 def outros_termos(S):
     if(token in P['op_ad']):
-        op_ad(P['termo' + S])
+        op_ad(P['termo'] + S)
         termo(P['outros_termos'] + S)
         outros_termos(S)
     else:
@@ -436,6 +468,7 @@ def op_ad(S):
     elif(token == 'simb_menos'):
         get_token()
     else:
+        print("Erro sintático na linha {}: operador '+' ou '-' esperado".format(cont_linha))
         error_func(S)
 
 def termo(S):
@@ -458,6 +491,7 @@ def op_mul(S):
     elif(token == 'simb_div'):
         get_token()
     else:
+        print("Erro sintático na linha {}: operador '*' ou '/' esperado".format(cont_linha))
         error_func(S)
 
 
@@ -466,7 +500,7 @@ def fator(S):
         get_token()
     elif(token == 'simb_apar'):
         get_token()
-        expressao('simb_fpar' + S)
+        expressao(['simb_fpar'] + S)
         if(token == 'simb_fpar'):
             get_token()
         else:
@@ -474,6 +508,7 @@ def fator(S):
     elif(token in P['numero']):
         numero(S)
     else:
+        print("Erro sintático na linha {}: fator esperado".format(cont_linha))
         error_func(S)
 
 def numero(S):
@@ -482,15 +517,43 @@ def numero(S):
     elif(token == 'num_real'):
         get_token()
     else:
+        print("Erro sintático na linha {}: valor numérico esperado".format(cont_linha))
         error_func(S)
 
 P = {
-    'numero': ['num_int', 'num_real'],
+    'programa': ['simb_program'],
+    'corpo': ['simb_const', 'simb_var', 'simb_procedure'],
+    'dc': ['simb_const', 'simb_var', 'simb_procedure'],
+    'dc_c': ['simb_const'],
+    'dc_v': ['simb_var'],
+    'tipo_var': ['num_int', 'num_real'],
+    'variaveis': ['id'],
+    'mais_var': ['simb_virg'],
+    'dc_p': ['simb_procedure'],
+    'parametros': ['simb_apar'],
+    'lista_par': ['id'],
+    'mais_par': ['simb_pv'],
+    'corpo_p': ['simb_var'],
+    'dc_loc': ['simb_var'],
+    'lista_arg': ['simb_apar'],
+    'argumentos': ['id'],
+    'mais_ident': ['simb_pv'],
+    'pfalsa': ['simb_else'],
+    'comandos': ['simb_read', 'simb_write', 'simb_while', 'simb_if', 'id', 'simb_begin', 'simb_for'],
     'cmd': ['simb_read', 'simb_write', 'simb_while', 'simb_if', 'id', 'simb_begin', 'simb_for'],
+    'ident': ['simb_atrib', 'simb_apar'],
+    'relacao': ['simb_igual', 'simb_dif', 'simb_maior_igual', 'simb_menor_igual', 'simb_maior', 'simb_menor'],
+    'expressao': ['simb_mais', 'simb_menos', 'id', 'simb_apar', 'num_int', 'num_real'],
+    'op_un': ['simb_mais', 'simb_menos'],
+    'outros_termos': ['simb_mais', 'simb_menos'],
+    'op_ad': ['simb_mais', 'simb_menos'],
+    'termo': ['simb_mais', 'simb_menos', 'simb_apar', 'id', 'num_int', 'num_real'],
+    'mais_fatores': ['simb_mult', 'simb_div'],
     'op_mul': ['simb_mult', 'simb_div'],
-    'op_ad': ['simb_mais', 'simb_menos']
+    'fator': ['id', 'num_int', 'num_real', 'simb_fpar'],
+    'numero': ['num_int', 'num_real']
 }   
 
 get_token()
-programa()
+programa([])
 f.close()
